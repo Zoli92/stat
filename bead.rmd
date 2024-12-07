@@ -235,7 +235,27 @@ A csúcsosság és a ferdeség által megadott értékek az ábrán is jól lát
       add = TRUE, col = "red", lwd = 2)
   
 ```
+### Bűnözés
 
+Tételezzük fel, hogy a minta elemei ugyanabból a normális eloszlásból származnak, amelynek a paramétereit nem ismerjük. Az átlagra szimmetrikus, 95% megbízhatóságú konfidenciaintervallum az eloszlás várható értékére:
+```{r}
+bun_10 <- as.numeric(df_2010[5,-1])
 
+also_hatar<-mean(bun_10)-sd(bun_10)/sqrt(length(bun_10))*qt(1-0.05/2, length(bun_10)-1)
+felso_hatar<-mean(bun_10)+sd(bun_10)/sqrt(length(bun_10))*qt(1-0.05/2, length(bun_10)-1)
+
+hist(bun_10)
+points(x=also_hatar, y=0, col="red", pch=19)
+points(x=felso_hatar, y=0, col="red", pch=19)
+
+bun_18 <- as.numeric(df_2018[5,-1])
+
+also_hatar<-mean(bun_18)-sd(bun_18)/sqrt(length(bun_18))*qt(1-0.05/2, length(bun_18)-1)
+felso_hatar<-mean(bun_18)+sd(bun_18)/sqrt(length(bun_18))*qt(1-0.05/2, length(bun_18)-1)
+
+hist(bun_18)
+points(x=also_hatar, y=0, col="red", pch=19)
+points(x=felso_hatar, y=0, col="red", pch=19)
+```
 
 
