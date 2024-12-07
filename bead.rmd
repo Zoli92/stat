@@ -58,9 +58,9 @@ Látható, hogy jóval több nőnek a legmagasabb végzettsége az érettségi, 
   n_10 <- mean(no_erettsegi_szazalek)
 
   plot_2010 <- ggplot() +
-    geom_histogram(data=NULL, aes(x=no_erettsegi_szazalek, y = after_stat(count)), binwidth =2, fill="#FFC0CB") +
+    geom_histogram(data=NULL, aes(x=no_erettsegi_szazalek, y = after_stat(count)), binwidth =2, fill="#FFC0CB", color="black") +
     geom_label(data=NULL, aes( x=4.5, y =1, label="nok"), color="#FFC0CB") +
-    geom_histogram(data=NULL, aes(x=ferfi_erettsegi_szazalek, y = -after_stat(count)), binwidth =2, fill="#ADD8E6") + 
+    geom_histogram(data=NULL, aes(x=ferfi_erettsegi_szazalek, y = -after_stat(count)), binwidth =2, fill="#ADD8E6", color="black") + 
     geom_label(data=NULL, aes(x=4.5, y=-1, label="ferfiak"), color="#ADD8E6") +
     xlab("Legmagasabb vegzettsegkent erettsegivel rendkelezok szazaleka 2010-ben") +
     scale_y_continuous(breaks = seq(-10, 10, by = 1), labels = abs(seq(-10, 10, by = 1))) +
@@ -74,9 +74,9 @@ Látható, hogy jóval több nőnek a legmagasabb végzettsége az érettségi, 
   n_18 <- mean(no_erettsegi_szazalek_18)
   
   plot_2018 <- ggplot() +
-    geom_histogram(data=NULL, aes(x=no_erettsegi_szazalek_18, y = after_stat(count)), binwidth =2, fill="#FFC0CB") +
+    geom_histogram(data=NULL, aes(x=no_erettsegi_szazalek_18, y = after_stat(count)), binwidth =2, fill="#FFC0CB", color="black") +
     geom_label(data=NULL, aes( x=4.5, y =1, label="nok"), color="#FFC0CB") +
-    geom_histogram(data=NULL, aes(x=ferfi_erettsegi_szazalek_18, y = -after_stat(count)), binwidth =2, fill="#ADD8E6") + 
+    geom_histogram(data=NULL, aes(x=ferfi_erettsegi_szazalek_18, y = -after_stat(count)), binwidth =2, fill="#ADD8E6", color="black") + 
     geom_label(data=NULL, aes(x=4.5, y=-1, label="ferfiak"), color="#ADD8E6") +
     xlab("Legmagasabb vegzettsegkent erettsegivel rendkelezok szazaleka 2018-ban") +
     scale_y_continuous(breaks = seq(-10, 10, by = 1),labels = abs(seq(-10, 10, by = 1))) +
@@ -108,3 +108,112 @@ Látható, hogy jóval több nőnek a legmagasabb végzettsége az érettségi, 
   #Férfiaknál hány megyében csökkent
   sum(kulonbseg_f < 0)
 ```
+### Foglalkoztatottság, jövedelem
+
+### Személygépkocsik
+
+2010 és 18 között jelentősen növekedett az ezer főre jutó gépjárművek száma, az országos átlag majdnem 33%-al növekedett. Ami érdekes, hogy az ezer főre jutó gépjárművek számában az élen a 12 legnyugatibb megye áll mind 2010-ben és 2018-ban. Fizetésben is a nyugati országrész áll jobban, azonban ennyire nem szélsőséges ott. Az átlagtól az egyes megyék átlagban 10%-al térnek el mindkét vizsgált évben.
+
+
+```{r}
+  gepkocsik_10 <- df_2010[7, -1]
+  hist(as.numeric(gepkocsik_10))
+  colnames(gepkocsik_10)[apply(gepkocsik_10, 2, function(x) any(x > 289))]
+  
+  atl_2010 <- mean(as.numeric(gepkocsik_10))
+  med_10<-median(as.numeric(gepkocsik_10))
+  
+  points(med_10, y=0, col="red", pch=19)
+  text(x=med_10, y = 0.5, labels=paste("Median =", med_10), col="red")
+  
+  points(atl_2010, y = 0, col="red", pch=19)
+  text(x=atl_2010, y = 1, labels=paste("Atlag=", atl_2010), col="red")
+  
+  gepkocsik_18 <- df_2018[7, -1]
+  hist(as.numeric(gepkocsik_18))
+  colnames(gepkocsik_18)[apply(gepkocsik_18, 2, function(x) any(x > 360))]
+  
+  atl_2018 = mean(as.numeric(gepkocsik_18))
+  med_18<-median(as.numeric(gepkocsik_18))
+  
+  points(med_18, y=0, col="red", pch = 19)
+  text(x=med_18, y = 0.5, labels=paste("Median =", med_18), col="red")
+  
+  points(atl_2018, y = 0, col="red", pch=19)
+  text(x=atl_2018, y = 1, labels=paste("Atlag=", atl_2018), col="red")
+
+
+  # Korrigált tapasztalti szórás
+  sd(as.numeric(gepkocsik_10))
+  sd(as.numeric(gepkocsik_18))
+  
+  #Szórási együttható
+  sd(as.numeric(gepkocsik_10))/atl_2010
+  sd(as.numeric(gepkocsik_18))/atl_2018
+  
+  
+  # Tapasztalati szórás
+  sqrt(mean((as.numeric(gepkocsik_10) - atl_2010)*(as.numeric(gepkocsik_10) - atl_2010)))
+  sqrt(mean((as.numeric(gepkocsik_18) - atl_2018)*(as.numeric(gepkocsik_18) - atl_2018)))
+```
+### Jövedelem
+A boxplot ábrán is jól látható a két vizsgált év közötti különbség. Outlier elemek nincsenek, az A pont és az E pont értékei minden esetben az adatok közül valóak, nem pedig az interkvartilis terjedelemmel kiszámolt érték. A legmagasabbb érték mindkét esetben természetesen Budapest, míg a legalacsonyabb Szabolcs-Szatmár-Bereg megye.
+
+```{r}
+  jovedelem_10 <- as.numeric(df_2010[9, -1])
+  
+  jovedelem_18 <- as.numeric(df_2018[9, -1])
+
+  jov_med_10 <- median(jovedelem_10)
+  jov_med_18 <- median(jovedelem_18)
+  
+  mean(jovedelem_10)
+  mean(jovedelem_18)
+  
+  q1_10 <- quantile(jovedelem_10, 0.25)
+  q3_10 <- quantile(jovedelem_10, 0.75)
+  IQR_10 <- q3_10 - q1_10
+  
+  min(jovedelem_10)
+  q1_10-1.5*IQR_10
+  
+  max(jovedelem_10)
+  q3_10+1.5*IQR_10
+  
+  q1_18 <- quantile(jovedelem_18, 0.25)
+  q3_18 <- quantile(jovedelem_18, 0.75)
+  IQR_18 <- q3_18 - q1_18
+  
+  min(jovedelem_18)
+  q1_18-1.5*IQR_18
+  
+  max(jovedelem_18)
+  q3_18+1.5*IQR_18
+  
+  boxplot_data= data.frame(
+      fizetes=c(jovedelem_10, jovedelem_18),
+      ev= rep(c("2010", "2018"), each= length(jovedelem_10))
+    )
+  ggplot(boxplot_data, aes(x=ev, y = fizetes, fill= ev)) +
+    geom_boxplot() + 
+    geom_point(aes(x=1, y = min(jovedelem_10)), color="red", size=3) + 
+    geom_text(aes(x=1, y = min(jovedelem_10), label="A értéke a legkisebb elem a mintából"), color="red", vjust=1) +
+    geom_point(aes(x=1, y=max(jovedelem_10)), color="red", size = 3) +
+    geom_text(aes(x=1, y= max(jovedelem_10), label="E értéke a legnagyobb elem a mintából"), color="red", vjust=-1) +
+    geom_point(aes(x = 2, y= min(jovedelem_18)), color="blue", size=3) +
+    geom_text(aes(x=2, y = min(jovedelem_18), label="A értéke a legkisebb elem a mintából"), color="blue", vjust=1) +
+    geom_point(aes(x=2, y=max(jovedelem_18)), color="blue", size = 3) +
+    geom_text(aes(x=2, y= max(jovedelem_18), label="E értéke a legnagyobb elem a mintából"), color="blue", vjust=1)
+  
+  #Ferdeség
+  sum((jovedelem_10-mean(jovedelem_10))^3)/(sd(jovedelem_10)^3)/length(jovedelem_10)
+  #Mivel a ferdeség pozitív, ezért az eloszlás a szimmetrikustól jobbra ferdül
+  
+  #Lapultság
+  sum((jovedelem_10-mean(jovedelem_10))^4)/(sd(jovedelem_10)^4)/length(jovedelem_10)-3
+  #Mivel a lapultság pozitív, ezért az eloszlás csúcsosabb a normális eloszlásnál
+```
+
+
+
+
