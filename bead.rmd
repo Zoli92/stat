@@ -1,6 +1,6 @@
 ---
 title: "Beadandó"
-author: "Gugolya Zoltán és Pegán Ágnes"
+author: "Gugolya Zoltán és Pegán Ágness"
 output:
   pdf_document:
     toc: true
