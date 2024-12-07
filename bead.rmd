@@ -204,14 +204,36 @@ A boxplot ábrán is jól látható a két vizsgált év közötti különbség.
     geom_text(aes(x=2, y = min(jovedelem_18), label="A értéke a legkisebb elem a mintából"), color="blue", vjust=1) +
     geom_point(aes(x=2, y=max(jovedelem_18)), color="blue", size = 3) +
     geom_text(aes(x=2, y= max(jovedelem_18), label="E értéke a legnagyobb elem a mintából"), color="blue", vjust=1)
-  
+```
+###
+A csúcsosság és a ferdeség által megadott értékek az ábrán is jól láthatóak
+```{r}
   #Ferdeség
   sum((jovedelem_10-mean(jovedelem_10))^3)/(sd(jovedelem_10)^3)/length(jovedelem_10)
-  #Mivel a ferdeség pozitív, ezért az eloszlás a szimmetrikustól jobbra ferdül
+  #Mivel a ferdeség pozitív, ezért az eloszlás a szimmetrikustól jobbra nyúlik el
   
   #Lapultság
   sum((jovedelem_10-mean(jovedelem_10))^4)/(sd(jovedelem_10)^4)/length(jovedelem_10)-3
   #Mivel a lapultság pozitív, ezért az eloszlás csúcsosabb a normális eloszlásnál
+  
+  suruseg_10 <- density(jovedelem_10)
+  plot(suruseg_10)
+  curve(dnorm(x, mean = mean(jovedelem_10), sd = sd(jovedelem_10)), 
+      add = TRUE, col = "red", lwd = 2)
+  
+  #Ferdeség
+  sum((jovedelem_18-mean(jovedelem_18))^3)/(sd(jovedelem_18)^3)/length(jovedelem_18)
+  #Mivel a ferdeség pozitív, ezért az eloszlás a szimmetrikustól jobbra nyúlik el
+  
+  #Lapultság
+  sum((jovedelem_18-mean(jovedelem_18))^4)/(sd(jovedelem_18)^4)/length(jovedelem_18)-3
+  #Mivel a lapultság negatív, ezért az eloszlás laposabb a normális eloszlásnál
+  
+  suruseg_18 <- density(jovedelem_18)
+  plot(suruseg_18)
+  curve(dnorm(x, mean = mean(jovedelem_18), sd = sd(jovedelem_18)), 
+      add = TRUE, col = "red", lwd = 2)
+  
 ```
 
 
