@@ -28,11 +28,11 @@ output:
   
   i <- 1
   for (megye in megye_lista) {
-    sheet_data <- read_excel("data.xlsx", sheet = i) %>% 
+    temp_data <- read_excel("data.xlsx", sheet = i) %>% 
       rename(Tulajdonsag = 1, Year_2010 = 2, Year_2018 = 3) %>% 
       mutate(Megye = megye)
   
-    data[[megye]] <- sheet_data
+    data[[megye]] <- temp_data
     i <- i + 1
   }
   
@@ -45,6 +45,16 @@ output:
   df_2018 <- combined_data %>%
     select(Tulajdonsag, Megye, Year_2018) %>%
     pivot_wider(names_from = Megye, values_from = Year_2018)
+```
+### Választási adatok beolvasás
+
+```{r}
+  valasztas_data_10 <- read_excel("2010_parlamenti/txt_1ford/egy_ert.xlsx", sheet = 1)
+  megye_valasztas <- valasztas_data_10 %>% 
+                      group_by(Megye, `Szervezet neve`) %>%
+                      summarize(szavazat = sum(`Érvényes szavazat`, na.rm = TRUE)) %>%
+                      pivot_wider(names_from =`Szervezet neve`, values_from = szavazat)d
+
 ```
 
 ### Érettségivel rendelkező férfiak és nők:
@@ -117,7 +127,7 @@ Látható, hogy jóval több nőnek a legmagasabb végzettsége az érettségi, 
 
 ```{r}
   gepkocsik_10 <- df_2010[7, -1]
-  hist(as.numeric(gepkocsik_10))
+  hist(as.numeric(gepkocsik_10), xlab="1000 fore juto gepkocsik szama", main="100 fore juto gepkocsik szama, hisztogram")
   colnames(gepkocsik_10)[apply(gepkocsik_10, 2, function(x) any(x > 289))]
   
   atl_2010 <- mean(as.numeric(gepkocsik_10))
@@ -130,7 +140,7 @@ Látható, hogy jóval több nőnek a legmagasabb végzettsége az érettségi, 
   text(x=atl_2010, y = 1, labels=paste("Atlag=", atl_2010), col="red")
   
   gepkocsik_18 <- df_2018[7, -1]
-  hist(as.numeric(gepkocsik_18))
+  hist(as.numeric(gepkocsik_18), xlab="1000 fore juto gepkocsik szama")
   colnames(gepkocsik_18)[apply(gepkocsik_18, 2, function(x) any(x > 360))]
   
   atl_2018 = mean(as.numeric(gepkocsik_18))
