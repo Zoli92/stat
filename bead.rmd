@@ -75,10 +75,7 @@ A 2018-as választás alapján is látható az az elterjedt nézet, hogy a budap
                           mutate(rank = rank(-szavazat), SZERVEZET = ifelse(rank <=6, SZERVEZET, 'Egyeb')) %>%
                           arrange(desc(szavazat))
       
-  
 
-  
-  
   pie(budapest_valasztas_10$szavazat,
       labels= budapest_valasztas_10$`Szervezet neve`,
        main = "Budapesti valasztasi eredmenyek, 2010",
@@ -171,9 +168,8 @@ Látható, hogy jóval több nőnek a legmagasabb végzettsége az érettségi, 
   #Férfiaknál hány megyében csökkent
   sum(kulonbseg_f < 0)
 ```
-# Jövedelem
 
-## Személygépkocsik
+# Személygépkocsik
 
 2010 és 18 között jelentősen növekedett az ezer főre jutó gépjárművek száma, az országos átlag majdnem 33%-al növekedett. Ami érdekes, hogy az ezer főre jutó gépjárművek számában az élen a 12 legnyugatibb megye áll mind 2010-ben és 2018-ban. Fizetésben is a nyugati országrész áll jobban, azonban ennyire nem szélsőséges ott. Az átlagtól az egyes megyék átlagban 10%-al térnek el mindkét vizsgált évben.
 
@@ -219,7 +215,7 @@ Látható, hogy jóval több nőnek a legmagasabb végzettsége az érettségi, 
   sqrt(mean((as.numeric(gepkocsik_10) - atl_2010)*(as.numeric(gepkocsik_10) - atl_2010)))
   sqrt(mean((as.numeric(gepkocsik_18) - atl_2018)*(as.numeric(gepkocsik_18) - atl_2018)))
 ```
-## Jövedelem
+# Jövedelem
 A boxplot ábrán is jól látható a két vizsgált év közötti különbség. Outlier elemek nincsenek, az A pont és az E pont értékei minden esetben az adatok közül valóak, nem pedig az interkvartilis terjedelemmel kiszámolt érték. A legmagasabbb érték mindkét esetben természetesen Budapest, míg a legalacsonyabb Szabolcs-Szatmár-Bereg megye.
 
 ```{r}
@@ -268,7 +264,7 @@ A boxplot ábrán is jól látható a két vizsgált év közötti különbség.
     geom_point(aes(x=2, y=max(jovedelem_18)), color="blue", size = 3) +
     geom_text(aes(x=2, y= max(jovedelem_18), label="E értéke a legnagyobb elem a mintából"), color="blue", vjust=1)
 ```
-## A csúcsosság és a ferdeség által megadott értékek az ábrán is jól láthatóak
+A csúcsosság és a ferdeség által megadott értékek az ábrán is jól láthatóak
 ```{r}
   #Ferdeség
   sum((jovedelem_10-mean(jovedelem_10))^3)/(sd(jovedelem_10)^3)/length(jovedelem_10)
@@ -344,7 +340,7 @@ Legyen H~0~: d~0~ = d~1~ illetve H~1~: d~0~ != d~1~
   var.test(elso_10, masodik_10)
 
 ```
-### Kétmintás t-próba
+### Welch-próba
 Mivel az F-próba p-értéke kisebb, mint 0.05, ezért elvetjük a nullhipotézist, tehát a két minta szórása szignifikánsan eltér, ezért az állítás vizsgálásához Welch-próbát alkalmazunk.
 Legyen H~0~: m~1~ = m~2~ illetve H~1~: m~1~ > m~2~.
 ```{r}
@@ -370,20 +366,70 @@ Legyen H~0~: m~1~ = m~2~ illetve H~1~: m~1~ > m~2~.
 t.test(elso_10, masodik_10, paired = FALSE,alternative = 'greater', var.equal = TRUE)
 
 ```
-Mivel 0.043 < 0.05, ezért elvetjük a nullhipotézist, tehát Budapestet leszámítva megállja a helyét az állítás, hogy ahol több felsőoktatást végzett ember van, ott szignifikánsan kevesebb a bűncselekmény.
+Mivel 0.043 < 0.05, ezért elvetjük a nullhipotézist, tehát Budapestet leszámítva megállja a helyét az állítás, hogy ahol több felsőoktatást végzett ember van, ott szignifikánsan kevesebb a bűncselekmény. Ebből is látszik, hogy fontos az oktatás.
 
 ## Szavazók változása 2010-18 között (Fidesz, MSZP)
-Vizsgáljuk meg, hogy változott-e szignifikánsan a 2010-es évek politkáját meghatározó két párt támogatottsága 2010 és 2018 között
+Vizsgáljuk meg, hogy nőtt-e szignifikánsan a 2010-es évek politkáját meghatározó két párt támogatottsága 2010 és 2018 között
 ```{r}
   fidesz_10 <- megye_valasztas_10 %>% filter(`Szervezet neve` == "FIDESZ,KDNP") %>% arrange(Megye)
   mszp_10 <- megye_valasztas_10 %>% filter(`Szervezet neve` == "MSZP") %>% arrange(Megye)
   fidesz_18 <- megye_valasztas_18 %>% filter(SZERVEZET == "FIDESZ - MAGYAR POLGÁRI SZÖVETSÉG-KERESZTÉNYDEMOKRATA NÉPPÁRT")
   mszp_18 <- megye_valasztas_18 %>% filter(SZERVEZET == "MAGYAR SZOCIALISTA PÁRT-PÁRBESZÉD MAGYARORSZÁGÉRT PÁRT")
 ```
-Tegyük fel, hogy a mintáink normális eloszlásúak, amiknek szórása nem ismert, azonban a mintáink összefüggőek, úgyhogy a különbségekre kell alkalmazni egymintás t-próbát.
+Tegyük fel, hogy a mintáink normális eloszlásúak, amiknek szórása nem ismert, azonban a mintáink összefüggőek, úgyhogy a különbségekre kell alkalmazni egymintás t-próbát. Legyen mindkét esetben H~0~: m~1~ = m~2~, H~1~: m~1~ < m~2~
 ```{r}
 
-fidesz_kulonbseg <- fidesz_18-fidesz_10
-mszp_kulonbseg <- mszp_18 - mszp_10
+fidesz_kulonbseg <- fidesz_18[,3]-fidesz_10[,3]
+mszp_kulonbseg <- mszp_18[,3] - mszp_10[,3]
+fidesz_probafv <- mean(fidesz_kulonbseg[,])/sd(fidesz_kulonbseg[,])/sqrt(length(fidesz_kulonbseg[,]))
+mszp_probafv <- mean(mszp_kulonbseg[,])/sd(mszp_kulonbseg[,])/sqrt(length(mszp_kulonbseg[,]))
+
+# Fidesz-p
+pt(fidesz_probafv, length(fidesz_kulonbseg[,])-1)
+
+#MSZP-p
+pt(mszp_probafv, length(mszp_kulonbseg[,])-1)
+```
+Mivel mindkét p-érték nagyobb mint 0.05, ezért nem tudjuk elvetni a nullhipotézist, tehát egyik párt esetében sem nőtt szignifikánsan a rájuk leadott szavazatok száma.
+
+## Függ-e a megjelent szavazóktól az érvénytelen szavazatok?
+
+Khínégyzet próbát alkalmazva próbáljuk eldönteni, hogy függ-e, hogy mennyi szavazó jelent meg, hogy a szavazatok hány százaléka érvénytelen, öt százalékos szignifikanciaszint mellett. Az eredeti adatokat százalékos formából kategóriákká alakítjuk, és így hozzuk létre a kontingenciatáblát. H~0~: nincs függőség H~1~: van függőség
+```{r}
+  
+
+  resztvevo_szazalek <- valasztas_data_18 %>%
+                        group_by(MEGYEKÓD, SZÉKHELY_TELEPÜLÉS_SORSZÁM) %>%
+                        summarize(szazalek = 100*sum(MEGJELENTEK, na.rm = TRUE)/sum(VÁLASZTÓPOLGÁR, na.rm = TRUE), ervenytelen = 100*sum(ÉRVÉNYTELEN, na.rm = TRUE)/sum(URNÁBAN_LEVŐ, na.rm = TRUE)) 
+  resztvevo_szazalek <- na.omit(resztvevo_szazalek)
+  resztvevo_kategoria <- cut(resztvevo_szazalek$szazalek,
+                             breaks = c(0, 67, 72, Inf),
+                             labels = c("alacsony reszvetel","kozepes reszvetel", "magas reszvetel"))
+  ervenytelen_kategoria <- cut(resztvevo_szazalek$ervenytelen,
+                               breaks = c(0, 0.9, 1.1, Inf),
+                               labels = c("alacsony","kozepes", "magas"))
+  kont_table = table(resztvevo_kategoria, ervenytelen_kategoria)
+  kont_table
+  chisq.test(kont_table)
 
 ```
+Mivel a p érték kisebb mint 0.05, ezért elvetjük a nullhipotézist, tehát van összefüggés a részvételi arány és az érvénytelen szavazatok között.
+
+# Modellillesztés
+Vizsgáljuk meg, hogy a felsőoktatási végzettséggel rendelkezők százaléka, az egy főre jutó jövedelem, és a munkanélküliség aránya milyen hatással van megyénként arra, hogy hány százalék szavaz a FIDESZ-KDNP-re.
+```{r}
+
+options(digits=3)
+megyenkenti_osszes_szavazat <- megye_valasztas_10 %>%
+                               group_by(Megye) %>%
+                               summarize(szavazat = sum(szavazat))
+megyenkenti_osszes_szavazat
+regresszio_data <- data.frame(megye = megye_lista,
+                              felsookt = as.numeric(df_2010[3,-1])+as.numeric(df_2010[4,-1]),
+                              jovedelem = as.numeric(df_2010[9,-1]),
+                              munkanelkuliseg = as.numeric(df_2018[6,-1]),
+                              fidesz_szavazatok = 100*as.numeric(fidesz_10$szavazat)/as.numeric(megyenkenti_osszes_szavazat$szavazat))
+model <- lm(regresszio_data$fidesz_szavazatok ~ regresszio_data$felsookt + regresszio_data$jovedelem + regresszio_data$munkanelkuliseg)
+summary(model)
+```
+A lineáris regressziós modellünk szerint, a felsőoktatási végzettséggel rendelkezők egységnyi változása 0.2 százalékponttal csökkentené a FIDESZ-KDNP kapott szavazati arányát, míg a munkanélküliség 0.17 százalékponttal. A jövedelem egységnyi változása növeli a FIDESZ-KDNP támogatottságát, 100000 forintonként 0.06 százalékponttal. A hiba szórása 6.15.
