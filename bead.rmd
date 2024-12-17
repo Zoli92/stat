@@ -16,7 +16,9 @@ output:
   options(digits=5)
   Sys.setlocale("LC_ALL", "en_US.UTF-8")
 ```
-# Adatok betöltése és átalakítása
+# Adatok betöltése és átalakítása, tisztítása
+
+A 2018-as foglalkoztatottságról nincsenek adatok, így azokat nullával helyettesítjük, így azonban később nem tudunk dolgozni velük, úgyhogy a foglalkoztatottságra irányuló vizsgálotaknál csak a 2010-es adatokra tudunk támaszkodni.
 ```{r}
   megye_lista <- c("Bacs-Kiskun", "Baranya", "Bekes", "Borsod-Abauj-Zemplen", "Budapest", 
                    "Csongrad-Csanad", "Fejer", "Gyor-Moson-Sopron", "Hajdu-Bihar", "Heves", 
@@ -30,7 +32,8 @@ output:
   for (megye in megye_lista) {
     temp_data <- read_excel("data.xlsx", sheet = i) %>% 
       rename(Tulajdonsag = 1, Year_2010 = 2, Year_2018 = 3) %>% 
-      mutate(Megye = megye)
+      mutate(Megye = megye) %>%
+      mutate(across(everything(), ~ ifelse(is.na(.), 0, .)))
   
     data[[megye]] <- temp_data
     i <- i + 1
@@ -46,9 +49,8 @@ output:
     select(Tulajdonsag, Megye, Year_2018) %>%
     pivot_wider(names_from = Megye, values_from = Year_2018)
 ```
-# Választási adatok beolvasása, kördiagram a budapesti eredmények szemléltetésére, Budapest-vidék eltérés.
 
-A 2018-as választás alapján is látható az az elterjedt nézet, hogy a budapestiek arányaiban kevesebben szavaznak a FIDESZ-KDNP-re, mint a vidékiek.
+# Választási adatok beolvasása
 
 ```{r, warning=FALSE, message = FALSE}
   valasztas_data_10 <- read_excel("2010_parlamenti/txt_1ford/egy_ert.xlsx", sheet = 1)
@@ -74,7 +76,13 @@ A 2018-as választás alapján is látható az az elterjedt nézet, hogy a budap
   budapest_valasztas_18 <- budapest_valasztas_18 %>%                   
                           mutate(rank = rank(-szavazat), SZERVEZET = ifelse(rank <=6, SZERVEZET, 'Egyeb')) %>%
                           arrange(desc(szavazat))
-      
+```      
+
+# Kördiagram a budapesti eredmények szemléltetésére, Budapest-vidék eltérés.
+
+A 2018-as választás alapján is látható az az elterjedt nézet, hogy a budapestiek arányaiban kevesebben szavaznak a FIDESZ-KDNP-re, mint a vidékiek.
+```{r, warning=FALSE, message = FALSE}
+
 
   pie(budapest_valasztas_10$szavazat,
       labels= budapest_valasztas_10$`Szervezet neve`,
@@ -103,11 +111,12 @@ A 2018-as választás alapján is látható az az elterjedt nézet, hogy a budap
                     summarize(szazalek = sum(szazalek, na.rm = TRUE)) %>%
                     arrange(desc(szazalek))
   
-  videk_szazalek[1:6,]
-  bud_szazalek[1:6,]
+  print(paste("videki fidesz szavazok aranya 2018-ban: ", videk_szazalek[1,-1]))
+  print(paste("budapesti fidesz szavazok aranya 2018-ban: ", bud_szazalek[1,-1]))
 ```
 
-# Érettségivel rendelkező férfiak és nők:
+# Érettségivel rendelkező férfiak és nők
+
 Látható, hogy jóval több nőnek a legmagasabb végzettsége az érettségi, mint férfinak, ami a felsőoktatásra is igaz lesz, a később láthatóak alapján. Átlagosan kb 6% ponttal több nőnek legmagasabb végzettsége az érettségi, mint férfinak. 2010 és 2018 a férfiak és nők közti különbség nőtt, mivel a nők közül 2% ponttal többen szereztek érettségit, míg a férfiak csak 1,5%. Az értékek összesen 10 esetben csökkentek, 4 megyében nőknél, 6 megyében pedig férfiaknál. A függőleges piros és kék vonalak az adott évre vonatkozó átlagot jelentik.
 
 ```{r, echo=TRUE, fig.keep='all', fig.height=4}
@@ -171,12 +180,12 @@ Látható, hogy jóval több nőnek a legmagasabb végzettsége az érettségi, 
 
 # Személygépkocsik
 
-2010 és 18 között jelentősen növekedett az ezer főre jutó gépjárművek száma, az országos átlag majdnem 33%-al növekedett. Ami érdekes, hogy az ezer főre jutó gépjárművek számában az élen a 12 legnyugatibb megye áll mind 2010-ben és 2018-ban. Fizetésben is a nyugati országrész áll jobban, azonban ennyire nem szélsőséges ott. Az átlagtól az egyes megyék átlagban 10%-al térnek el mindkét vizsgált évben.
+2010 és 18 között jelentősen növekedett az ezer főre jutó gépjárművek száma, az országos átlag majdnem 33%-al növekedett. Ami érdekes, hogy az ezer főre jutó gépjárművek számában az élen a 12 legnyugatibb megye áll mind 2010-ben és 2018-ban. Fizetésben is a nyugati országrész áll jobban, azonban ennyire nem szélsőségesen. Az átlagtól az egyes megyék átlagban 10%-al térnek el mindkét vizsgált évben.
 
 
 ```{r}
   gepkocsik_10 <- df_2010[7, -1]
-  hist(as.numeric(gepkocsik_10), xlab="1000 fore juto gepkocsik szama", main="100 fore juto gepkocsik szama, hisztogram")
+  hist(as.numeric(gepkocsik_10), xlab="1000 fore juto gepkocsik szama", main="1000 fore juto gepkocsik szama 2010-ben, hisztogram")
   colnames(gepkocsik_10)[apply(gepkocsik_10, 2, function(x) any(x > 289))]
   
   atl_2010 <- mean(as.numeric(gepkocsik_10))
@@ -189,7 +198,7 @@ Látható, hogy jóval több nőnek a legmagasabb végzettsége az érettségi, 
   text(x=atl_2010, y = 1, labels=paste("Atlag=", atl_2010), col="red")
   
   gepkocsik_18 <- df_2018[7, -1]
-  hist(as.numeric(gepkocsik_18), xlab="1000 fore juto gepkocsik szama")
+  hist(as.numeric(gepkocsik_18), xlab="1000 fore juto gepkocsik szama", main="1000 fore juto gepkocsik szama 2018-ban, hisztogram")
   colnames(gepkocsik_18)[apply(gepkocsik_18, 2, function(x) any(x > 360))]
   
   atl_2018 = mean(as.numeric(gepkocsik_18))
@@ -215,7 +224,9 @@ Látható, hogy jóval több nőnek a legmagasabb végzettsége az érettségi, 
   sqrt(mean((as.numeric(gepkocsik_10) - atl_2010)*(as.numeric(gepkocsik_10) - atl_2010)))
   sqrt(mean((as.numeric(gepkocsik_18) - atl_2018)*(as.numeric(gepkocsik_18) - atl_2018)))
 ```
+
 # Jövedelem
+
 A boxplot ábrán is jól látható a két vizsgált év közötti különbség. Outlier elemek nincsenek, az A pont és az E pont értékei minden esetben az adatok közül valóak, nem pedig az interkvartilis terjedelemmel kiszámolt érték. A legmagasabbb érték mindkét esetben természetesen Budapest, míg a legalacsonyabb Szabolcs-Szatmár-Bereg megye.
 
 ```{r}
@@ -264,7 +275,9 @@ A boxplot ábrán is jól látható a két vizsgált év közötti különbség.
     geom_point(aes(x=2, y=max(jovedelem_18)), color="blue", size = 3) +
     geom_text(aes(x=2, y= max(jovedelem_18), label="E értéke a legnagyobb elem a mintából"), color="blue", vjust=1)
 ```
+
 A csúcsosság és a ferdeség által megadott értékek az ábrán is jól láthatóak
+
 ```{r}
   #Ferdeség
   sum((jovedelem_10-mean(jovedelem_10))^3)/(sd(jovedelem_10)^3)/length(jovedelem_10)
@@ -296,13 +309,14 @@ A csúcsosság és a ferdeség által megadott értékek az ábrán is jól lát
 # Bűnözés
 
 Tételezzük fel, hogy a minta elemei ugyanabból a normális eloszlásból származnak, amelynek a paramétereit nem ismerjük. A tapasztalati átlagra szimmetrikus, 95% megbízhatóságú konfidenciaintervallum az eloszlás várható értékére:
+
 ```{r}
 bun_10 <- as.numeric(df_2010[5,-1])
 
 also_hatar<-mean(bun_10)-sd(bun_10)/sqrt(length(bun_10))*qt(1-0.05/2, length(bun_10)-1)
 felso_hatar<-mean(bun_10)+sd(bun_10)/sqrt(length(bun_10))*qt(1-0.05/2, length(bun_10)-1)
 
-hist(bun_10)
+hist(bun_10,xlab="Regisztralt buncselekmeny 1000 fore", main="Regisztralt buncselekmeny 1000 fore, 2010, hisztogram")
 points(x=also_hatar, y=0, col="red", pch=19)
 points(x=felso_hatar, y=0, col="red", pch=19)
 
@@ -311,17 +325,18 @@ bun_18 <- as.numeric(df_2018[5,-1])
 also_hatar<-mean(bun_18)-sd(bun_18)/sqrt(length(bun_18))*qt(1-0.05/2, length(bun_18)-1)
 felso_hatar<-mean(bun_18)+sd(bun_18)/sqrt(length(bun_18))*qt(1-0.05/2, length(bun_18)-1)
 
-hist(bun_18)
+hist(bun_18,xlab="Regisztralt buncselekmeny 1000 fore", main="Regisztralt buncselekmeny 1000 fore, 2010, hisztogram")
 points(x=also_hatar, y=0, col="red", pch=19)
 points(x=felso_hatar, y=0, col="red", pch=19)
 ```
-Tehát egy megyében a 1000 főre jutó bűncselekmény átlaga 95%-os valószínűséggel 37.4 és 47.4 között volt 2010-ben, míg 2018-ban 16.4 és között.
+Tehát egy megyében a 1000 főre jutó bűncselekmény átlaga 95%-os valószínűséggel 37.4 és 47.4 között volt 2010-ben, míg 2018-ban 16.4 és 20.75 között.
 
 # Hipotézisvizsgálat
 
 Az alábbiakban néhány érdekes összefüggés igazságát fogjuk vizsgálni.
 
 ## Felsőfokú iskolai végzettség és a regisztrált bűncselekmények közötti kapcsolat.
+
 Bontsuk két csoportra a megyéket, az első 10 megye, ahol a legalacsonyabb a felsőfokú iskolai végzettséggel rendelkezők aránya, illetve az utolsó 10 megye, és tekintsük a hozzájuk tartozó egy főre jutó regisztrált bűncselekményeket. Az első 10 megye átlaga legyen m~1~, a második 10-é pedig m~2~. Vizsgáljuk meg 5%-os szignifikanciaszint mellett, hogy alacsonyabb-e azon megyékben a bűncselekmények száma, ahol többen részesültek felsőfokú oktatásban. Továbbá tegyük fel, hogy a mintáink normális eloszlásúak. Mivel a szórások ismeretlenek, ezért először egy F-próbát kell végrehajtani, majd az eredménytől függően t-, vagy Welch-próbát.
 
 ```{r}
@@ -369,14 +384,17 @@ t.test(elso_10, masodik_10, paired = FALSE,alternative = 'greater', var.equal = 
 Mivel 0.043 < 0.05, ezért elvetjük a nullhipotézist, tehát Budapestet leszámítva megállja a helyét az állítás, hogy ahol több felsőoktatást végzett ember van, ott szignifikánsan kevesebb a bűncselekmény. Ebből is látszik, hogy fontos az oktatás.
 
 ## Szavazók változása 2010-18 között (Fidesz, MSZP)
-Vizsgáljuk meg, hogy nőtt-e szignifikánsan a 2010-es évek politkáját meghatározó két párt támogatottsága 2010 és 2018 között
+
+Vizsgáljuk meg, hogy nőtt-e szignifikánsan a 2010-es évek politikáját meghatározó két párt támogatottsága 2010 és 2018 között
 ```{r}
   fidesz_10 <- megye_valasztas_10 %>% filter(`Szervezet neve` == "FIDESZ,KDNP") %>% arrange(Megye)
   mszp_10 <- megye_valasztas_10 %>% filter(`Szervezet neve` == "MSZP") %>% arrange(Megye)
   fidesz_18 <- megye_valasztas_18 %>% filter(SZERVEZET == "FIDESZ - MAGYAR POLGÁRI SZÖVETSÉG-KERESZTÉNYDEMOKRATA NÉPPÁRT")
   mszp_18 <- megye_valasztas_18 %>% filter(SZERVEZET == "MAGYAR SZOCIALISTA PÁRT-PÁRBESZÉD MAGYARORSZÁGÉRT PÁRT")
 ```
+
 Tegyük fel, hogy a mintáink normális eloszlásúak, amiknek szórása nem ismert, azonban a mintáink összefüggőek, úgyhogy a különbségekre kell alkalmazni egymintás t-próbát. Legyen mindkét esetben H~0~: m~1~ = m~2~, H~1~: m~1~ < m~2~
+
 ```{r}
 
 fidesz_kulonbseg <- fidesz_18[,3]-fidesz_10[,3]
@@ -415,7 +433,20 @@ Khínégyzet próbát alkalmazva próbáljuk eldönteni, hogy függ-e, hogy menn
 ```
 Mivel a p érték kisebb mint 0.05, ezért elvetjük a nullhipotézist, tehát van összefüggés a részvételi arány és az érvénytelen szavazatok között.
 
+## Ugyanabból az eloszlásból származnak-e az álláskeresők és a foglalkoztatottak aránya?
+
+Khínégyzet próbával vizsgáljuk meg, hogy az álláskeresők százalékának és a foglalkoztatottak százalékának az eloszlása különbözik-e szignifikánsan, 5%-os szignifikanciaszint mellett. Legyen H~0~: a két megoszlás megegyezik, és H~1~: a két megoszlás nem egyezik meg.
+```{r}
+
+foglal <- as.numeric(df_2010[6,-1])
+munkanelkuli <- as.numeric(df_2010[8,-1])
+chisq.test(foglal, munkanelkuli)
+```
+Mivel a p érték nem kisebb, mint 0.05, ezért nem tudjuk elvetni a nullhipotézist, tehát az álláskeresők százalékának és a foglalkoztatottak százalékának az eloszlása nem különbözik szignifikánsan. 
+
+
 # Modellillesztés
+
 Vizsgáljuk meg, hogy a felsőoktatási végzettséggel rendelkezők százaléka, az egy főre jutó jövedelem, és a munkanélküliség aránya milyen hatással van megyénként arra, hogy hány százalék szavaz a FIDESZ-KDNP-re.
 ```{r}
 
@@ -423,7 +454,6 @@ options(digits=3)
 megyenkenti_osszes_szavazat <- megye_valasztas_10 %>%
                                group_by(Megye) %>%
                                summarize(szavazat = sum(szavazat))
-megyenkenti_osszes_szavazat
 regresszio_data <- data.frame(megye = megye_lista,
                               felsookt = as.numeric(df_2010[3,-1])+as.numeric(df_2010[4,-1]),
                               jovedelem = as.numeric(df_2010[9,-1]),
@@ -432,4 +462,8 @@ regresszio_data <- data.frame(megye = megye_lista,
 model <- lm(regresszio_data$fidesz_szavazatok ~ regresszio_data$felsookt + regresszio_data$jovedelem + regresszio_data$munkanelkuliseg)
 summary(model)
 ```
-A lineáris regressziós modellünk szerint, a felsőoktatási végzettséggel rendelkezők egységnyi változása 0.2 százalékponttal csökkentené a FIDESZ-KDNP kapott szavazati arányát, míg a munkanélküliség 0.17 százalékponttal. A jövedelem egységnyi változása növeli a FIDESZ-KDNP támogatottságát, 100000 forintonként 0.06 százalékponttal. A hiba szórása 6.15.
+A lineáris regressziós modellünk szerint, a felsőoktatási végzettséggel rendelkezők egységnyi változása 0.2 százalékponttal csökkentené a FIDESZ-KDNP kapott szavazati arányát, míg a munkanélküliség 0.17 százalékponttal. A jövedelem egységnyi változása növeli a FIDESZ-KDNP támogatottságát, 100000 forintonként 0.06 százalékponttal. A hiba szórása 6.15. A felsőoktatási végzettség együttható szórása 0.21, a jövedelemé 1,6*10^-5^, a munkanélküliségé pedig 0.24.
+
+# Összefoglalás
+
+Statisztikai elemzésünk során kiderült, hogy vidéken nagyobb arányban szavaznak a FIDESZ-KDNP-re, mint a budapestiek, hogy a nők jobban teljesítenek oktatás terén, mint a férfiak. Továbbá láthattuk a világban is jelenlévő nyugat-kelet ellentétet az egy főre jutó személygépkocsik példáján, illetve azt az egyértelmű tényt is alátámasztottuk, hogy Budapesten a legmagasabb az egy főre jutó jövedelem. 2010 és 18 között jelentősen csökkent a bűnözés. A hipotézisvizsgálatok során érdekes összefüggéseket tártunk fel, például hogy (Budapestet leszámítva), ahol többen részesültek felsőoktatásban, ott alacsonyabb a bűnözés, vagy hogy a munkakeresők és a foglalkoztatottak arányának eloszlása nem tér el szignifikánsan egymástól. Lineáris regressziós modellt alkalmazva egy képet kaphattunk arról, hogy statisztikailag hogyan függ megyénként a FIDESZ-KDNP szavazók aránya bizonyos ismérvektől.
